@@ -20,4 +20,11 @@ router.get("/floors", adminController_1.getFloors);
 const upload = (0, multer_1.default)(); // Files are stored in memory
 // Route to send notices with multiple files
 router.post("/notices", upload.array("documents", 10), adminController_1.createNotice); // Allow up to 10 files
+router.get("/student-documents", adminController_1.getStudentDocuments);
+// Route to verify a document
+router.post("/verify-document", adminController_1.verifyDocument);
+router.get("/complaints", adminController_1.getAllComplaints);
+router.put("/room-change-request/status", adminController_1.updateRoomChangeRequestStatus);
+// Admin: Get All Room Change Requests
+router.get("/room-change-requests", adminController_1.getAllRoomChangeRequests);
 exports.default = router;

@@ -12,9 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadDocuments = void 0;
+exports.submitRoomChangeRequest = exports.submitComplaint = exports.getUploadedDocuments = exports.uploadDocuments = void 0;
 const client_1 = require("@prisma/client");
 const superbase_1 = __importDefault(require("../utils/superbase"));
+const uuid_1 = require("uuid"); // Import UUID for generating unique complaint numbers
 const prisma = new client_1.PrismaClient();
 const uploadDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -26,6 +27,13 @@ const uploadDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         if (!Array.isArray(documentTypes) || documentTypes.length !== files.length) {
             res.status(400).json({ error: "Document types must match the number of uploaded files." });
+            return;
+        }
+        const studentExists = yield prisma.user.findUnique({
+            where: { id: studentId },
+        });
+        if (!studentExists) {
+            res.status(404).json({ error: "Student not found." });
             return;
         }
         const uploadedDocuments = [];
@@ -46,7 +54,7 @@ const uploadDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function
                 res.status(500).json({ error: "Failed to upload document." });
                 return;
             }
-            const { data: publicUrlData } = superbase_1.default.storage.from("uploads").getPublicUrl(filePath);
+            const { data: publicUrlData } = superbase_1.default.storage.from("upload").getPublicUrl(filePath);
             // Save document details in the database
             const document = yield prisma.studentDocument.create({
                 data: {
@@ -65,3 +73,106 @@ const uploadDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.uploadDocuments = uploadDocuments;
+const getUploadedDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { studentId } = req.params;
+        // Check if the student exists
+        const studentExists = yield prisma.user.findUnique({
+            where: { id: studentId },
+        });
+        if (!studentExists) {
+            res.status(404).json({ error: "Student not found." });
+            return;
+        }
+        // Fetch all documents for the student
+        const documents = yield prisma.studentDocument.findMany({
+            where: { studentId },
+            select: {
+                id: true,
+                documentUrl: true,
+                documentType: true,
+                status: true,
+                uploadedAt: true,
+            },
+        });
+        res.status(200).json({ documents });
+    }
+    catch (error) {
+        console.error("Error in getUploadedDocuments:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.getUploadedDocuments = getUploadedDocuments;
+const submitComplaint = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { studentId, complaint } = req.body;
+        if (!studentId || !complaint) {
+            res.status(400).json({ error: "Student ID and complaint are required." });
+            return;
+        }
+        // Check if the student exists
+        const studentExists = yield prisma.user.findUnique({
+            where: { id: studentId },
+        });
+        if (!studentExists) {
+            res.status(404).json({ error: "Student not found." });
+            return;
+        }
+        // Generate a unique complaint number
+        const complaintNumber = `CMP-${(0, uuid_1.v4)().slice(0, 8).toUpperCase()}`;
+        // Save the complaint
+        const newComplaint = yield prisma.messComplaint.create({
+            data: {
+                studentId,
+                complaint,
+                complaintNumber,
+            },
+        });
+        res.status(201).json({ message: "Complaint submitted successfully.", newComplaint });
+    }
+    catch (error) {
+        console.error("Error in submitComplaint:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.submitComplaint = submitComplaint;
+const submitRoomChangeRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { studentId, reason, currentRoom, desiredRoom } = req.body;
+        if (!studentId || !reason || !currentRoom || !desiredRoom) {
+            res.status(400).json({ error: "Student ID, reason, current room, and desired room are required." });
+            return;
+        }
+        // Check if the student exists
+        const studentExists = yield prisma.user.findUnique({
+            where: { id: studentId },
+        });
+        if (!studentExists) {
+            res.status(404).json({ error: "Student not found." });
+            return;
+        }
+        // Check if the student already has a pending room change request
+        const existingRequest = yield prisma.roomChangeRequest.findFirst({
+            where: { studentId, status: "Pending" },
+        });
+        if (existingRequest) {
+            res.status(400).json({ error: "You already have a pending room change request." });
+            return;
+        }
+        // Create a new room change request
+        const newRequest = yield prisma.roomChangeRequest.create({
+            data: {
+                studentId,
+                reason,
+                currentRoom,
+                desiredRoom,
+            },
+        });
+        res.status(201).json({ message: "Room change request submitted successfully.", newRequest });
+    }
+    catch (error) {
+        console.error("Error in submitRoomChangeRequest:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.submitRoomChangeRequest = submitRoomChangeRequest;

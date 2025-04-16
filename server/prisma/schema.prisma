@@ -59,6 +59,7 @@ model MessComplaint {
   student   User     @relation(fields: [studentId], references: [id])
   studentId String
   complaint String
+  complaintNumber String   @unique 
   createdAt DateTime @default(now())
 }
 
@@ -81,7 +82,10 @@ model RoomChangeRequest {
   student   User     @relation(fields: [studentId], references: [id])
   studentId String
   reason    String
+  currentRoom  String
+  desiredRoom  String
   status    String   @default("Pending") // Approved, Rejected, Pending
+  createdAt DateTime @default(now())
 }
 
 // 📌 Notices (Posted by Warden)
@@ -142,3 +146,6 @@ model StudentDocument {
   status      String    @default("Pending") // Pending, Verified, Rejected
   uploadedAt  DateTime  @default(now())
 }
+
+
+

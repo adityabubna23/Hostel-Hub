@@ -59,13 +59,19 @@ export const api = {
   student: {
     uploadDocuments: (formData: FormData) => {
       return apiClient
-        .post('/api/student/upload-documents', formData, {
+        .post('/student/upload-documents', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         })
         .then((res) => res.data);
     },
+    getUploadedDocuments: (studentId: string) =>
+      apiClient.get(`/student/${studentId}/documents`).then((res) => res.data),
+    submitComplaint: (data: { studentId: string; complaint: string }) =>
+      apiClient.post('/student/complaints', data).then((res) => res.data),
+    submitRoomChangeRequest: (data: { studentId: string; reason: string; currentRoom: string; desiredRoom: string }) =>
+      apiClient.post('/student/room-change-request', data).then((res) => res.data),
   },
   admin: {
     addFloor: (data: { name: string }) =>
@@ -78,6 +84,16 @@ export const api = {
       apiClient.post('/admin/room/assign', data).then((res) => res.data),
     getFloors: () =>
       apiClient.get('/admin/floors').then((res) => res.data),
+    getStudentDocuments: () =>
+      apiClient.get("/admin/student-documents").then((res) => res.data),
+    verifyDocument: (data: { documentId: string; status: string }) =>
+      apiClient.post("/admin/verify-document", data).then((res) => res.data),
+    getAllComplaints: () =>
+      apiClient.get('/admin/complaints').then((res) => res.data),
+    getAllRoomChangeRequests: () =>
+      apiClient.get('/admin/room-change-requests').then((res) => res.data),
+    updateRoomChangeRequestStatus: (data: { requestId: string; status: string; alternateRoom?: string }) =>
+      apiClient.put('/admin/room-change-request/status', data).then((res) => res.data),
     sendNotice: (formData: FormData) => {
       return apiClient
         .post('/admin/notices', formData, {

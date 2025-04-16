@@ -16,6 +16,9 @@ import ReceiveNoticesPage from '@/pages/notice/recieveNotices';
 import HomePage from '@/pages/HomePage';
 import CreateUser from '@/pages/admin/createUser';
 import UploadDocuments from '@/pages/student/UploadDocument';
+import VerifyDocuments from '@/pages/admin/VerifyDocument';
+import ViewComplaints from '@/pages/admin/ViewComplain';
+import SubmitComplaint from '@/pages/student/SubmitComplain';
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -105,6 +108,8 @@ const AppRoutes = () => {
                 <Route path="assign-student" element={<AssignStudentPage/>} />
                 <Route path="send-notice" element={<SendNoticePage/>} />
                 <Route path="create-user" element={<CreateUser />} />
+                <Route path='verify-documents' element={<VerifyDocuments/>} />
+                <Route path="complaints" element={<ViewComplaints/>} />
               </Routes>
             </AdminLayout>
           </ProtectedRoute>
@@ -123,6 +128,7 @@ const AppRoutes = () => {
                 <Route path="notices" element={<ReceiveNoticesPage initialRole="Student" />} />
                 <Route path="profile" element={<div>Student Profile</div>} />
                 <Route path="upload-documents" element={<UploadDocuments/>} />
+                <Route path="complaints" element={<SubmitComplaint/>} />
               </Routes>
             </StudentLayout>
           </ProtectedRoute>

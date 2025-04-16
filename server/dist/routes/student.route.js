@@ -10,4 +10,7 @@ const router = express_1.default.Router();
 const upload = (0, multer_1.default)(); // Configure multer for file uploads
 // Allow multiple documents to be uploaded
 router.post("/upload-documents", upload.array("documents", 10), student_controller_1.uploadDocuments); // Allow up to 10 files
+router.get("/:studentId/documents", student_controller_1.getUploadedDocuments);
+router.post("/complaints", student_controller_1.submitComplaint);
+router.post("/room-change-request", student_controller_1.submitRoomChangeRequest);
 exports.default = router;

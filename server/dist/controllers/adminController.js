@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyDocument = exports.getStudentDocuments = exports.createNotice = exports.getFloors = exports.assignStudent = exports.checkRoomAssigned = exports.addRoom = exports.addFloor = void 0;
+exports.getAllRoomChangeRequests = exports.updateRoomChangeRequestStatus = exports.getAllComplaints = exports.verifyDocument = exports.getStudentDocuments = exports.createNotice = exports.getFloors = exports.assignStudent = exports.checkRoomAssigned = exports.addRoom = exports.addFloor = void 0;
 const client_1 = require("@prisma/client");
 const emailService_1 = __importDefault(require("../utils/emailService"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -353,3 +353,134 @@ const verifyDocument = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.verifyDocument = verifyDocument;
+const getAllComplaints = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const complaints = yield prisma.messComplaint.findMany({
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        res.status(200).json(complaints);
+    }
+    catch (error) {
+        console.error("Error in getAllComplaints:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.getAllComplaints = getAllComplaints;
+const updateRoomChangeRequestStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { requestId, status, alternateRoom } = req.body;
+        if (!requestId || !status) {
+            res.status(400).json({ error: "Request ID and status are required." });
+            return;
+        }
+        // Validate status
+        if (!["Approved", "Rejected"].includes(status)) {
+            res.status(400).json({ error: "Invalid status. Allowed values are 'Approved' or 'Rejected'." });
+            return;
+        }
+        // Fetch the room change request
+        const roomChangeRequest = yield prisma.roomChangeRequest.findUnique({
+            where: { id: requestId },
+            include: { student: true },
+        });
+        if (!roomChangeRequest) {
+            res.status(404).json({ error: "Room change request not found." });
+            return;
+        }
+        // If approved, update the student's room
+        if (status === "Approved") {
+            let roomToAssign = roomChangeRequest.desiredRoom;
+            // If an alternate room is provided, use it instead
+            if (alternateRoom) {
+                roomToAssign = alternateRoom;
+            }
+            // Check if the room exists
+            const newRoom = yield prisma.room.findUnique({
+                where: { name: roomToAssign },
+            });
+            if (!newRoom) {
+                res.status(404).json({ error: `Room '${roomToAssign}' not found.` });
+                return;
+            }
+            // Check if the room has capacity
+            const currentOccupancy = yield prisma.studentRoom.count({
+                where: { roomId: newRoom.id },
+            });
+            if (currentOccupancy >= newRoom.capacity) {
+                res.status(400).json({ error: `The room '${roomToAssign}' is already full.` });
+                return;
+            }
+            // Update the student's room assignment
+            yield prisma.studentRoom.update({
+                where: { studentId: roomChangeRequest.studentId },
+                data: { roomId: newRoom.id },
+            });
+            // Send an email notification to the student
+            const emailSubject = "Room Change Request Approved";
+            const emailBody = `
+        <h2>Hello ${roomChangeRequest.student.name},</h2>
+        <p>Your room change request has been approved. You have been assigned to the following room:</p>
+        <ul>
+          <li><strong>Room Name:</strong> ${newRoom.name}</li>
+          <li><strong>Room Capacity:</strong> ${newRoom.capacity}</li>
+        </ul>
+        <p>Please contact the hostel management for further details.</p>
+        <br/>
+        <p>Regards,<br/>Hostel Management Team</p>
+      `;
+            yield (0, emailService_1.default)(roomChangeRequest.student.email, emailSubject, emailBody);
+        }
+        // Update the room change request status
+        const updatedRequest = yield prisma.roomChangeRequest.update({
+            where: { id: requestId },
+            data: { status },
+        });
+        res.status(200).json({ message: `Room change request ${status.toLowerCase()} successfully.`, updatedRequest });
+    }
+    catch (error) {
+        console.error("Error in updateRoomChangeRequestStatus:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.updateRoomChangeRequestStatus = updateRoomChangeRequestStatus;
+const getAllRoomChangeRequests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requests = yield prisma.roomChangeRequest.findMany({
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        // Add current room and desired room details
+        const enrichedRequests = yield Promise.all(requests.map((request) => __awaiter(void 0, void 0, void 0, function* () {
+            const currentRoom = yield prisma.room.findUnique({
+                where: { name: request.currentRoom },
+            });
+            const desiredRoom = yield prisma.room.findUnique({
+                where: { name: request.desiredRoom },
+            });
+            return Object.assign(Object.assign({}, request), { currentRoomDetails: currentRoom || null, desiredRoomDetails: desiredRoom || null });
+        })));
+        res.status(200).json(enrichedRequests);
+    }
+    catch (error) {
+        console.error("Error in getAllRoomChangeRequests:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.getAllRoomChangeRequests = getAllRoomChangeRequests;
