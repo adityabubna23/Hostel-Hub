@@ -1,0 +1,9 @@
+POST http://localhost:5000/api/users/create
+Content-Type: application/json
+
+{
+    "name": "John singh",
+    "email": "rameswar25@gmail.com",
+    "password": "tapu@123",
+    "role": "student"
+}
