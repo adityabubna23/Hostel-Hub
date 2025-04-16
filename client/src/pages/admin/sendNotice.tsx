@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef} from 'react';
 import { api } from '../../lib/api';
 import { 
   Bell, Send, FileText, Upload, CheckCircle, AlertCircle, 
@@ -6,12 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
-interface NoticeFormData {
-  title: string;
-  content: string;
-  targetRoles: string[];
-  documents: File[];
-}
+
 
 interface NotificationState {
   show: boolean;

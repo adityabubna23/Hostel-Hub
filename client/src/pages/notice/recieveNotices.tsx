@@ -260,8 +260,8 @@ const ReceiveNoticesPage = ({ initialRole = "student" }: { initialRole?: string 
                       <div className="p-4 border-b border-yellow-100 bg-gray-50">
                         <div className="grid grid-cols-2 gap-2">
                           {notice.documentUrl.split(",").slice(0, 2).map((url, urlIndex) => {
-                            const urlObj = new URL(url.trim());
-                            const fileName = urlObj.searchParams.get("fileName") || `Document_${urlIndex + 1}`;
+                           
+                            
                             
                             return (
                               <div 

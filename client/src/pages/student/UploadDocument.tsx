@@ -47,7 +47,9 @@ const UploadDocuments = () => {
     formData.append("studentId", "student-id"); // Replace with actual student ID
 
     try {
-      const response = await api.student.uploadDocuments(formData); // Use the API method
+      const response = await api.student.uploadDocuments(formData);
+      console.log("Upload response:", response);
+       // Use the API method
       alert("Documents uploaded successfully!");
       setFiles({});
       setErrors([]);
