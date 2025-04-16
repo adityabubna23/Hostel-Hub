@@ -109,7 +109,7 @@
     "skipLibCheck": true ,                                /* Skip type checking all .d.ts files. */
     "outDir": "./dist", // Output directory for compiled files
     "rootDir": "./src",
-    "types": ["node"]
+    
   },
   "include": [
     "src/**/*",          // Include all TypeScript files in the `src` folder
