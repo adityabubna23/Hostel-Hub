@@ -13,7 +13,6 @@ import {
   ChevronDown, 
   ChevronUp,
   X,
-  ExternalLink,
   Eye,
   Calendar
 } from "lucide-react";
@@ -27,7 +26,7 @@ interface Notice {
 }
 
 const ReceiveNoticesPage = ({ initialRole = "student" }: { initialRole?: string }) => {
-  const [selectedRole, setSelectedRole] = useState(initialRole);
+  const [selectedRole ] = useState(initialRole);
   const [expandedNotice, setExpandedNotice] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>("");

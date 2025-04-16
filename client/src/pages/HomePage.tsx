@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import  { useEffect, useRef } from "react";
 import Spline from "@splinetool/react-spline";
 import { useNavigate } from "react-router-dom";
 
