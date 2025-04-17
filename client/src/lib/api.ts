@@ -41,7 +41,10 @@ export const api = {
       apiClient.get<User>('/auth/me').then((res) => res.data),
     logout: () => 
       apiClient.post('/logout').then((res) => res.data),
+    signup: (data: { name: string; email: string; password: string ; roleName: string}) =>
+      apiClient.post<{ message: string; userId: string; }>('/auth/signup', data).then((res) => res.data),
   },
+  
   users: {
     getAll: () => 
       apiClient.get<User[]>('/users').then((res) => res.data),

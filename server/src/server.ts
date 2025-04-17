@@ -7,6 +7,7 @@ import adminRoutes from "./routes/admin.route";
 import messageRoutes from "./routes/messageRouter";
 import studentRoutes from "./routes/student.route";
 
+
 const PORT = process.env.PORT || 5000;
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/student", studentRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

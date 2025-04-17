@@ -119,4 +119,50 @@ AuthController.getCurrentUser = (req, res, next) => __awaiter(void 0, void 0, vo
         res.status(500).json({ message: "An error occurred while fetching user details." });
     }
 });
+AuthController.signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, password, roleName } = req.body;
+    if (!name || !email || !password || !roleName) {
+        res.status(400).json({ message: "All fields are required: name, email, password, roleName." });
+        return;
+    }
+    try {
+        // Check if the user already exists
+        const existingUser = yield prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            res.status(400).json({ message: "User with this email already exists." });
+            return;
+        }
+        // Check if the role exists
+        const role = yield prisma.role.findUnique({ where: { name: roleName } });
+        if (!role) {
+            res.status(400).json({ message: "Invalid role specified." });
+            return;
+        }
+        // Hash the password
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        // Create the user
+        const newUser = yield prisma.user.create({
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                role: {
+                    connect: { name: roleName },
+                },
+            },
+        });
+        res.status(201).json({
+            message: "User registered successfully.",
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                role: roleName,
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.default = AuthController;

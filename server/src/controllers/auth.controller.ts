@@ -139,6 +139,61 @@ class AuthController {
     }
   };
 
+  static signup: RequestHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const { name, email, password, roleName } = req.body;
+
+    if (!name || !email || !password || !roleName) {
+      res.status(400).json({ message: "All fields are required: name, email, password, roleName." });
+      return;
+    }
+
+    try {
+      // Check if the user already exists
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        res.status(400).json({ message: "User with this email already exists." });
+        return;
+      }
+
+      // Check if the role exists
+      const role = await prisma.role.findUnique({ where: { name: roleName } });
+      if (!role) {
+        res.status(400).json({ message: "Invalid role specified." });
+        return;
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create the user
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: {
+            connect: { name: roleName },
+          },
+        },
+      });
+
+      res.status(201).json({
+        message: "User registered successfully.",
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: roleName,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default AuthController;

@@ -74,8 +74,6 @@ model Fees {
 }
 
 
-
-
 // 📌 Room Change Request
 model RoomChangeRequest {
   id        String   @id @default(uuid())
